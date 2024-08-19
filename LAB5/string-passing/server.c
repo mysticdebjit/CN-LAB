@@ -4,7 +4,6 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 int main() {
     int sockfd;
@@ -27,8 +26,6 @@ int main() {
     if (bind(sockfd, (const struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
         printf("Bind failed\n");
         return 1;
-    } else {
-        printf("Bind successful\n");
     }
 
     while (1) {
@@ -37,20 +34,15 @@ int main() {
             printf("Receiving failed\n");
         } else {
             buf[recv_len] = '\0';
-            printf("Received message: %s\n", buf);
+            printf("Client: %s\n", buf);
+        }
 
-            int num1, num2;
-            sscanf(buf, "%d %d", &num1, &num2);
+        printf("Server: Enter a message: ");
+        fgets(buf, sizeof(buf), stdin);
+        buf[strcspn(buf, "\n")] = '\0';
 
-            int sum = num1 + num2;
-            printf("Calculated sum: %d\n", sum);
-
-            sprintf(buf, "%d", sum);
-            if (sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *)&client_addr, addr_len) == -1) {
-                printf("Error in sending\n");
-            } else {
-                printf("Result sent back to client\n");
-            }
+        if (sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *)&client_addr, addr_len) == -1) {
+            printf("Error in sending\n");
         }
     }
 

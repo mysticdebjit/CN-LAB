@@ -1,71 +1,67 @@
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-
-#define PORT 8080
-#define BUFFER_SIZE 1024
-#define STOP_MESSAGE "stop"
 
 int main() {
-    int sock = 0;
-    struct sockaddr_in serv_addr;
-    char buffer[BUFFER_SIZE] = {0};
-
-    // Create socket
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("Socket creation error\n");
-        return -1;
+    int sockfd;
+    char buf[1024];
+    sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sockfd != -1) {
+        printf("Socket is created successfully\n");
+    } else {
+        printf("Socket is not created\n");
+        return 1;
     }
 
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    struct sockaddr_in server_addr, client_addr;
+    socklen_t addr_len = sizeof(server_addr);
 
-    // Convert IP addresses from text to binary form
-    if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr) <= 0) {
-        printf("Invalid address/ Address not supported\n");
-        return -1;
+    client_addr.sin_family = AF_INET;
+    client_addr.sin_port = htons(8081);
+    client_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    if (bind(sockfd, (const struct sockaddr *)&client_addr, sizeof(client_addr)) == -1) {
+        printf("Client bind failed\n");
+        return 1;
     }
 
-    // Connect to the server
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-        printf("Connection Failed\n");
-        return -1;
-    }
-
-    printf("Connected to the server. Start chatting...\n");
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(8080); 
+    server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     while (1) {
         printf("Client: ");
-        fgets(buffer, BUFFER_SIZE, stdin);
-        buffer[strcspn(buffer, "\n")] = '\0'; // Remove trailing newline
+        fgets(buf, sizeof(buf), stdin);
+        buf[strcspn(buf, "\n")] = '\0'; 
 
-        send(sock, buffer, strlen(buffer), 0);
+        if (sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *)&server_addr, addr_len) == -1) {
+            printf("Error in sending\n");
+        } else {
+            printf("Message sent successfully\n");
+        }
 
-        // Check for stop message
-        if (strncmp(buffer, STOP_MESSAGE, strlen(STOP_MESSAGE)) == 0) {
+        if (strcmp(buf, "stop") == 0) {
             printf("You have left the chat.\n");
             break;
         }
 
-        memset(buffer, 0, BUFFER_SIZE);
-        int valread = read(sock, buffer, BUFFER_SIZE);
-        if (valread < 0) {
-            perror("Read failed");
-            close(sock);
-            exit(EXIT_FAILURE);
+        int recv_len = recvfrom(sockfd, buf, sizeof(buf), 0, NULL, NULL);
+        if (recv_len == -1) {
+            printf("Error in receiving\n");
+        } else {
+            buf[recv_len] = '\0'; 
+            printf("Server: %s\n", buf);
         }
 
-        printf("Server: %s\n", buffer);
-
-        // Check for stop message
-        if (strncmp(buffer, STOP_MESSAGE, strlen(STOP_MESSAGE)) == 0) {
+        if (strcmp(buf, "stop") == 0) {
             printf("Server has left the chat.\n");
             break;
         }
     }
 
-    close(sock);
     return 0;
 }
+

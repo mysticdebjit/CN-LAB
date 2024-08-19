@@ -1,9 +1,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h>  // For struct sockaddr_in
-#include <arpa/inet.h>   // For htons and inet_addr
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
-#include <string.h>      // For strlen
+#include <string.h>
 
 int main() {
     int sockfd, b1;
@@ -16,9 +16,8 @@ int main() {
         printf("Socket is not created\n");
     }
 
-    struct sockaddr_in sender; // Declare a sender structure
+    struct sockaddr_in sender;
 
-    // Populating the structure
     sender.sin_family = AF_INET;
     sender.sin_port = htons(8080);
     sender.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -28,7 +27,7 @@ int main() {
     printf("enter a msh: ");
     scanf("%s", buf);
 
-    struct sockaddr_in client; // Declare a client structure for sending data
+    struct sockaddr_in client; 
     client.sin_family = AF_INET;
     client.sin_port = htons(8080);
     client.sin_addr.s_addr = inet_addr("127.0.0.1");

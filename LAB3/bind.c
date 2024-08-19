@@ -1,7 +1,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <netinet/in.h> // For struct sockaddr_in
-#include <arpa/inet.h>  // For htons and inet_addr
+#include <netinet/in.h> 
+#include <arpa/inet.h>  
 #include <stdio.h>
 
 int main()
@@ -18,9 +18,8 @@ int main()
         printf("Socket is not created\n");
     }
 
-    struct sockaddr_in sender; // Declare a sender structure
+    struct sockaddr_in sender; 
 
-    // Populating the structure
     sender.sin_family = AF_INET;
     sender.sin_port = htons(8080);
     sender.sin_addr.s_addr = inet_addr("127.0.0.1");
